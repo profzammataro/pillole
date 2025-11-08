@@ -1,1 +1,821 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Farmaci</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            position: relative;
+        }
+
+        .edit-mode-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .edit-mode-btn.locked {
+            background: #dc3545;
+            color: white;
+        }
+
+        .edit-mode-btn.locked:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .edit-mode-btn.unlocked {
+            background: #28a745;
+            color: white;
+        }
+
+        .edit-mode-btn.unlocked:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+
+        .mode-indicator {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .mode-indicator.view-mode {
+            background: #e7f3ff;
+            color: #0d47a1;
+            border: 2px solid #2196F3;
+        }
+
+        .mode-indicator.edit-mode {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .password-modal.active {
+            display: flex;
+        }
+
+        .password-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .password-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .password-input.error {
+            border-color: #dc3545;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .password-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .password-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        .password-btn.confirm {
+            background: #667eea;
+            color: white;
+        }
+
+        .password-btn.confirm:hover {
+            background: #5568d3;
+        }
+
+        .password-btn.cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .password-btn.cancel:hover {
+            background: #5a6268;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9em;
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+            padding-right: 100px;
+        }
+
+        .date-display {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .medication-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .medication-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .medication-card.completed {
+            border-left-color: #28a745;
+            background: #e8f5e9;
+        }
+
+        .medication-card.read-only {
+            cursor: default;
+        }
+
+        .medication-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .medication-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .medication-time {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .medication-dosage {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-container input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .checkbox-label {
+            font-size: 1em;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-label.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .dosage-selector {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .dosage-option {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            font-size: 0.9em;
+        }
+
+        .dosage-option:hover:not(.disabled) {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .dosage-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .dosage-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .yesterday-info {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .yesterday-info strong {
+            color: #1976D2;
+        }
+
+        .yesterday-dosage {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .note {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            color: #856404;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            height: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            min-width: 50px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                padding-right: 0;
+                margin-bottom: 50px;
+            }
+
+            .edit-mode-btn {
+                top: 10px;
+                right: 10px;
+                font-size: 0.8em;
+                padding: 8px 15px;
+            }
+
+            .medication-name {
+                font-size: 1.1em;
+                min-width: 150px;
+            }
+
+            .medication-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="edit-mode-btn locked" id="editModeBtn">
+            🔒 Sola Lettura
+        </button>
+
+        <h1>💊 Gestione Farmaci</h1>
+        
+        <div class="mode-indicator view-mode" id="modeIndicator">
+            👁️ MODALITÀ VISUALIZZAZIONE
+        </div>
+
+        <div class="date-display" id="dateDisplay"></div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar">0%</div>
+        </div>
+
+        <div id="medicationsList">
+            <div class="loading">Caricamento...</div>
+        </div>
+
+        <div class="note">
+            <strong>⚠️ Nota importante:</strong> Augmentin va assunto ogni 8 ore per 4 giorni. Quetiapina, Lasix e Paracetamolo vanno presi solo se necessario.
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div class="password-modal" id="passwordModal">
+        <div class="password-content">
+            <h2>🔐 Inserisci Password</h2>
+            <div class="error-message" id="errorMessage">Password errata! Riprova.</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Inserisci la password">
+            <div class="password-buttons">
+                <button class="password-btn cancel" id="cancelBtn">Annulla</button>
+                <button class="password-btn confirm" id="confirmBtn">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDkYsaQrxABakjPwm05FXtWKS7ww0TQYv0",
+            authDomain: "pillole-11038.firebaseapp.com",
+            databaseURL: "https://pillole-11038-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "pillole-11038",
+            storageBucket: "pillole-11038.firebasestorage.app",
+            messagingSenderId: "1083583059491",
+            appId: "1:1083583059491:web:63a6dea6d61f8fe6a84396"
+        };
+
+        // Password protetta
+        const EDIT_PASSWORD = "Lory";
+        let isEditMode = false;
+
+        let app, database;
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            database = getDatabase(app);
+            console.log("Firebase inizializzato correttamente");
+        } catch (error) {
+            console.error("Errore inizializzazione Firebase:", error);
+        }
+
+        const medications = [
+            { id: 'kcl', name: 'KCL retard', dosage: '1 cp', time: '08:00', type: 'regular' },
+            { id: 'cardicor', name: 'CARDICOR', dosage: '1,25MG - 1c', time: '08:00', type: 'regular' },
+            { id: 'cholecomb', name: 'CHOLECOMB', dosage: '20MG/10MG - 1cp', time: '22:00', type: 'regular' },
+            { id: 'tareg', name: 'TAREG', dosage: '160MG - 1cp', time: '08:00', type: 'regular' },
+            { id: 'norvasc', name: 'NORVASC', dosage: '10MG - 1cp', time: '20:00', type: 'regular' },
+            { id: 'omeprazolo', name: 'Omeprazolo', dosage: '20MG - 1cp', time: '08:00', type: 'regular' },
+            { id: 'previscan', name: 'Previscan', dosage: 'Secondo INR', time: '18:00', type: 'dosage-selection', options: ['1/2', '3/4', '1', '1 e 1/4', '1 e 1/2'] },
+            { id: 'augmentin', name: 'Augmentin', dosage: '1g ogni 8 ore', time: '08:00, 16:00, 00:00', type: 'temporary', note: 'Per 4 giorni' },
+            { id: 'quetiapina', name: 'Quetiapina', dosage: '25mg', time: '22:00', type: 'as-needed', note: 'Se insonnia' },
+            { id: 'lasix', name: 'Lasix', dosage: '25mg - 1 cpo', time: 'Mattina', type: 'as-needed' },
+            { id: 'paracetamolo', name: 'Paracetamolo', dosage: '500mg (febbre) / 1000mg (dolore)', time: 'Al bisogno', type: 'as-needed' }
+        ];
+
+        // Gestione modalità modifica
+        const editModeBtn = document.getElementById('editModeBtn');
+        const modeIndicator = document.getElementById('modeIndicator');
+        const passwordModal = document.getElementById('passwordModal');
+        const passwordInput = document.getElementById('passwordInput');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const errorMessage = document.getElementById('errorMessage');
+
+        editModeBtn.addEventListener('click', () => {
+            if (isEditMode) {
+                // Disattiva modalità modifica
+                isEditMode = false;
+                updateUIMode();
+            } else {
+                // Mostra modal password
+                passwordModal.classList.add('active');
+                passwordInput.value = '';
+                passwordInput.focus();
+                errorMessage.classList.remove('show');
+                passwordInput.classList.remove('error');
+            }
+        });
+
+        confirmBtn.addEventListener('click', checkPassword);
+        
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            passwordModal.classList.remove('active');
+            passwordInput.value = '';
+            errorMessage.classList.remove('show');
+            passwordInput.classList.remove('error');
+        });
+
+        function checkPassword() {
+            if (passwordInput.value === EDIT_PASSWORD) {
+                isEditMode = true;
+                passwordModal.classList.remove('active');
+                updateUIMode();
+                passwordInput.value = '';
+            } else {
+                errorMessage.classList.add('show');
+                passwordInput.classList.add('error');
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        function updateUIMode() {
+            if (isEditMode) {
+                editModeBtn.textContent = '🔓 Modalità Modifica';
+                editModeBtn.classList.remove('locked');
+                editModeBtn.classList.add('unlocked');
+                modeIndicator.textContent = '✏️ MODALITÀ MODIFICA ATTIVA';
+                modeIndicator.classList.remove('view-mode');
+                modeIndicator.classList.add('edit-mode');
+            } else {
+                editModeBtn.textContent = '🔒 Sola Lettura';
+                editModeBtn.classList.remove('unlocked');
+                editModeBtn.classList.add('locked');
+                modeIndicator.textContent = '👁️ MODALITÀ VISUALIZZAZIONE';
+                modeIndicator.classList.remove('edit-mode');
+                modeIndicator.classList.add('view-mode');
+            }
+            
+            // Aggiorna gli elementi interattivi
+            updateInteractiveElements();
+        }
+
+        function updateInteractiveElements() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const dosageOptions = document.querySelectorAll('.dosage-option');
+            const cards = document.querySelectorAll('.medication-card');
+            const labels = document.querySelectorAll('.checkbox-label');
+
+            checkboxes.forEach(cb => {
+                cb.disabled = !isEditMode;
+            });
+
+            dosageOptions.forEach(opt => {
+                if (isEditMode) {
+                    opt.classList.remove('disabled');
+                } else {
+                    opt.classList.add('disabled');
+                }
+            });
+
+            cards.forEach(card => {
+                if (isEditMode) {
+                    card.classList.remove('read-only');
+                } else {
+                    card.classList.add('read-only');
+                }
+            });
+
+            labels.forEach(label => {
+                if (isEditMode) {
+                    label.classList.remove('disabled');
+                } else {
+                    label.classList.add('disabled');
+                }
+            });
+        }
+
+        function getDateKey(daysOffset = 0) {
+            const date = new Date();
+            date.setDate(date.getDate() + daysOffset);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function displayDate() {
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').textContent = today.toLocaleDateString('it-IT', options);
+        }
+
+        function updateProgress(data) {
+            const total = medications.length;
+            let completed = 0;
+            
+            if (data) {
+                medications.forEach(med => {
+                    if (data[med.id] && data[med.id].taken === true) {
+                        completed++;
+                    }
+                });
+            }
+            
+            const percentage = Math.round((completed / total) * 100);
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = `${completed}/${total} - ${percentage}%`;
+        }
+
+        function renderMedications(todayData, yesterdayData) {
+            const container = document.getElementById('medicationsList');
+            container.innerHTML = '';
+
+            medications.forEach(med => {
+                const medData = todayData?.[med.id] || { taken: false, dosage: null };
+                const card = document.createElement('div');
+                card.className = `medication-card ${medData.taken ? 'completed' : ''} ${!isEditMode ? 'read-only' : ''}`;
+                card.id = `card-${med.id}`;
+
+                let content = `
+                    <div class="medication-header">
+                        <div class="medication-name">${med.name}</div>
+                        <div class="medication-time">${med.time}</div>
+                    </div>
+                    <div class="medication-dosage">${med.dosage}${med.note ? ' - ' + med.note : ''}</div>
+                `;
+
+                // Mostra info di ieri solo per Previscan
+                if (med.id === 'previscan') {
+                    if (yesterdayData?.[med.id]?.dosage) {
+                        const yesterdayDosage = yesterdayData[med.id].dosage;
+                        content += `
+                            <div class="yesterday-info">
+                                <strong>📅 Ieri:</strong> 
+                                <span class="yesterday-dosage">${yesterdayDosage}</span>
+                            </div>
+                        `;
+                    } else {
+                        content += `
+                            <div class="yesterday-info" style="background: #fff9e6; border-left-color: #ffc107;">
+                                <strong>ℹ️ Info:</strong> Nessun dato disponibile per ieri
+                            </div>
+                        `;
+                    }
+                }
+
+                if (med.type === 'dosage-selection') {
+                    content += `<div class="dosage-selector" id="dosage-${med.id}">`;
+                    med.options.forEach(opt => {
+                        const isSelected = medData.dosage === opt;
+                        content += `
+                            <div class="dosage-option ${isSelected ? 'selected' : ''} ${!isEditMode ? 'disabled' : ''}" 
+                                 data-med-id="${med.id}" 
+                                 data-dosage="${opt}">
+                                ${opt}
+                            </div>
+                        `;
+                    });
+                    content += `</div>`;
+                }
+
+                content += `
+                    <div class="checkbox-container">
+                        <input type="checkbox" 
+                               id="check-${med.id}" 
+                               data-med-id="${med.id}" 
+                               ${medData.taken ? 'checked' : ''}
+                               ${!isEditMode ? 'disabled' : ''}>
+                        <label class="checkbox-label ${!isEditMode ? 'disabled' : ''}" for="check-${med.id}">Assunto</label>
+                    </div>
+                `;
+
+                card.innerHTML = content;
+                container.appendChild(card);
+            });
+
+            attachEventListeners();
+            updateProgress(todayData);
+        }
+
+        function attachEventListeners() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', handleCheckboxChange);
+            });
+
+            document.querySelectorAll('.dosage-option').forEach(option => {
+                option.addEventListener('click', handleDosageSelection);
+            });
+        }
+
+        function handleCheckboxChange(e) {
+            if (!isEditMode) return;
+            
+            const medId = e.target.dataset.medId;
+            const isChecked = e.target.checked;
+            const todayKey = getDateKey(0);
+            
+            console.log(`Checkbox changed: ${medId} = ${isChecked}`);
+            
+            const updates = {};
+            updates[`${todayKey}/${medId}/taken`] = isChecked;
+            
+            const med = medications.find(m => m.id === medId);
+            if (med && med.type === 'dosage-selection') {
+                const currentDosage = document.querySelector(`#dosage-${medId} .dosage-option.selected`);
+                if (!currentDosage) {
+                    updates[`${todayKey}/${medId}/dosage`] = med.options[2];
+                }
+            }
+            
+            update(ref(database), updates)
+                .then(() => console.log('Aggiornamento riuscito'))
+                .catch(err => console.error('Errore aggiornamento:', err));
+        }
+
+        function handleDosageSelection(e) {
+            if (!isEditMode || e.target.classList.contains('disabled')) return;
+            
+            const medId = e.target.dataset.medId;
+            const selectedDosage = e.target.dataset.dosage;
+            const todayKey = getDateKey(0);
+            
+            console.log(`Dosage selected: ${medId} = ${selectedDosage}`);
+            
+            document.querySelectorAll(`#dosage-${medId} .dosage-option`).forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            e.target.classList.add('selected');
+            
+            const updates = {};
+            updates[`${todayKey}/${medId}/dosage`] = selectedDosage;
+            
+            update(ref(database), updates)
+                .then(() => console.log('Dosaggio aggiornato'))
+                .catch(err => console.error('Errore aggiornamento dosaggio:', err));
+        }
+
+        // Initialize
+        displayDate();
+        
+        // Aggiorna la data ogni minuto
+        setInterval(() => {
+            const currentKey = getDateKey(0);
+            const storedKey = document.getElementById('dateDisplay').dataset.dateKey;
+            
+            if (storedKey && storedKey !== currentKey) {
+                console.log('Cambio giorno rilevato, ricarico...');
+                location.reload();
+            }
+        }, 60000);
+        
+        if (database) {
+            const todayKey = getDateKey(0);
+            const yesterdayKey = getDateKey(-1);
+            
+            document.getElementById('dateDisplay').dataset.dateKey = todayKey;
+            
+            console.log(`Listening to: ${todayKey} and ${yesterdayKey}`);
+            
+            let yesterdayDataCache = null;
+            let todayDataCache = null;
+            
+            // Listen for yesterday's data
+            onValue(ref(database, yesterdayKey), (snapshot) => {
+                console.log('Yesterday data received:', snapshot.val());
+                yesterdayDataCache = snapshot.val();
+                if (todayDataCache !== null) {
+                    renderMedications(todayDataCache, yesterdayDataCache);
+                }
+            }, (error) => {
+                console.error('Errore lettura ieri:', error);
+            });
+            
+            // Listen for today's data
+            onValue(ref(database, todayKey), (snapshot) => {
+                console.log('Today data received:', snapshot.val());
+                todayDataCache = snapshot.val();
+                renderMedications(todayDataCache, yesterdayDataCache);
+            }, (error) => {
+                console.error('Errore lettura oggi:', error);
+                document.getElementById('medicationsList').innerHTML = 
+                    '<div class="error">Errore nel caricamento dei dati. Verifica la connessione.</div>';
+            });
+        }
+    </script>
+</body>
+</html>
