@@ -480,7 +480,7 @@
         </div>
 
         <div class="note">
-            <strong>⚠️ Nota importante:</strong> Augmentin va assunto ogni 8 ore per 4 giorni. Quetiapina, Paracetamolo vanno presi solo se necessario.
+            <strong>⚠️ Nota importante:</strong> Quetiapina, Paracetamolo vanno presi solo se necessario.
         </div>
     </div>
 
@@ -534,11 +534,11 @@
             { id: 'norvasc', name: 'NORVASC', dosage: '10MG - 1cp', time: '20:00', type: 'regular' },
             { id: 'omeprazolo', name: 'Omeprazolo', dosage: '20MG - 1cp', time: '08:00', type: 'regular' },
             { id: 'previscan', name: 'Previscan', dosage: 'Secondo INR', time: '18:00', type: 'dosage-selection', options: ['0','1/4','1/2', '3/4', '1', '1 e 1/4', '1 e 1/2'] },
-           // { id: 'augmentin', name: 'Augmentin', dosage: '1g ogni 8 ore', time: '08:00, 16:00, 00:00', type: 'multiple-doses', doses: [
-              //  { id: 'augmentin_08', time: '08:00' },
-             //   { id: 'augmentin_16', time: '16:00' },
-              //  { id: 'augmentin_00', time: '00:00' }
-         //   ], note: 'Per 4 giorni' },
+            { id: 'eparina', name: 'eparina', dosage: '6000 UI mattina e sera', time: '08:00, 20:00', type: 'multiple-doses', doses: [
+               { id: 'augmentin_08', time: '08:00' },
+             
+               { id: 'augmentin_00', time: '00:00' },
+         
             { id: 'quetiapina', name: 'Quetiapina', dosage: '25mg', time: '22:00', type: 'as-needed', note: 'Se insonnia' },
             { id: 'lasix', name: 'Lasix', dosage: '25mg - 1 cpo', time: 'Mattina', type: 'as-needed' },
             { id: 'paracetamolo', name: 'Paracetamolo', dosage: '500mg (febbre) / 1000mg (dolore)', time: 'Al bisogno', type: 'as-needed' }
