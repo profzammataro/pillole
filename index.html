@@ -526,13 +526,16 @@
         }
 
         const medications = [
-           // { id: 'kcl', name: 'KCL retard', dosage: '1 cp', time: '08:00', type: 'regular' },
-            { id: 'Spirolang', name: 'SPIROLANG', dosage: '25 MG', time: '16:00', type: 'regular' },
+           // { id: 'kcl', name: 'KCL retard', dosage: '1 cp', time: '08:00,13:00, 20:00', type: 'multiple-doses', doses: [
+               { id: 'KCL_colaz', time: '08:00' },
+               { id: 'KCL_pranz', time: '13:00' },
+               { id: 'KLC_cena', time: '20:00' }]},,
+            { id: 'Spirolang', name: 'SPIROLANG', dosage: '2 comp da 25 MG', time: '16:00', type: 'regular' },
             { id: 'cardicor', name: 'CARDICOR', dosage: '1,25MG - 1c', time: '08:00', type: 'regular' },
-            { id: 'cholecomb', name: 'CHOLECOMB', dosage: '20MG/10MG - 1cp', time: '22:00', type: 'regular' },
+            { id: 'cholecomb', name: 'CHOLECOMB', dosage: '20MG/10MG - 1cp', time: '21:00', type: 'regular' },
             { id: 'tareg', name: 'TAREG', dosage: '160MG - 1cp', time: '08:00', type: 'regular' },
             { id: 'norvasc', name: 'NORVASC', dosage: '10MG - 1cp', time: '20:00', type: 'regular' },
-            { id: 'omeprazolo', name: 'Omeprazolo', dosage: '20MG - 1cp', time: '08:00', type: 'regular' },
+            { id: 'omeprazolo', name: 'Omeprazolo', dosage: '20MG - 1cp - a digiuno', time: '07:00', type: 'regular' },
             { id: 'previscan', name: 'Previscan', dosage: 'Secondo INR', time: '18:00', type: 'dosage-selection', options: ['0','1/4','1/2', '3/4', '1', '1 e 1/4', '1 e 1/2'] },
             { id: 'eparina', name: 'eparina', dosage: '6000 UI mattina e sera', time: '08:00, 20:00', type: 'multiple-doses', doses: [
                { id: 'eparina_08', time: '08:00' },
@@ -540,7 +543,7 @@
                { id: 'eparina_20', time: '20:00' }]},
          
             { id: 'quetiapina', name: 'Quetiapina', dosage: '25mg', time: '22:00', type: 'as-needed', note: 'Se insonnia' },
-            { id: 'lasix', name: 'Lasix', dosage: '25mg - 1 cpo', time: 'Mattina', type: 'as-needed' },
+            { id: 'lasix', name: 'Lasix', dosage: '25mg - 1 cpo', time: 'Mattina 8:00', type: 'as-needed' },
             { id: 'paracetamolo', name: 'Paracetamolo', dosage: '500mg (febbre) / 1000mg (dolore)', time: 'Al bisogno', type: 'as-needed' }
         ];
 
