@@ -61,76 +61,6 @@
             transform: scale(1.05);
         }
 
-        .notification-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .notification-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.9em;
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .notification-btn.enable {
-            background: #28a745;
-            color: white;
-        }
-
-        .notification-btn.enable:hover {
-            background: #218838;
-        }
-
-        .notification-btn.test {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .notification-btn.test:hover {
-            background: #138496;
-        }
-
-        .notification-btn:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .notification-status {
-            text-align: center;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        .notification-status.enabled {
-            background: #d4edda;
-            color: #155724;
-            border: 2px solid #28a745;
-        }
-
-        .notification-status.disabled {
-            background: #f8d7da;
-            color: #721c24;
-            border: 2px solid #dc3545;
-        }
-
-        .notification-status.default {
-            background: #fff3cd;
-            color: #856404;
-            border: 2px solid #ffc107;
-        }
-
         .mode-indicator {
             text-align: center;
             padding: 10px;
@@ -524,14 +454,6 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
-
-            .notification-controls {
-                flex-direction: column;
-            }
-
-            .notification-btn {
-                min-width: 100%;
-            }
         }
     </style>
 </head>
@@ -543,19 +465,6 @@
 
         <h1>💊 Gestione Farmaci</h1>
         
-        <div class="notification-status default" id="notificationStatus">
-            🔔 Clicca per attivare le notifiche
-        </div>
-
-        <div class="notification-controls">
-            <button class="notification-btn enable" id="enableNotificationsBtn">
-                🔔 Attiva Notifiche
-            </button>
-            <button class="notification-btn test" id="testNotificationBtn">
-                🔔 Test Notifica
-            </button>
-        </div>
-
         <div class="mode-indicator view-mode" id="modeIndicator">
             👁️ MODALITÀ VISUALIZZAZIONE
         </div>
@@ -616,7 +525,7 @@
             console.error("Errore inizializzazione Firebase:", error);
         }
 
-         const medications = [
+        const medications = [
           // { id: 'kcl', name: 'KCL retard', dosage: '1 cp', time: '08:00,13:00,20:00  per 4 giorni fino al 21/12/25 compreso', type: 'multiple-doses', doses: [
           //     { id: 'KCL_colaz', time: '08:00' },
           //     { id: 'KCL_pranz', time: '13:00' },
@@ -635,183 +544,15 @@
              
             //   { id: 'eparina_20', time: '20:00' }]},
   
-       { id: 'augmentin', name: 'Augmentin', dosage: '1g', time: '11:00, 23:00', type: 'multiple-doses', doses: [
-       { id: 'augmentin_11', time: '11:00' },
-       { id: 'augmentin_23', time: '23:00' }]},
+       { id: 'augmentin', name: 'Augmentin', dosage: '1g', time: '09:00, 21:00', type: 'multiple-doses', doses: [
+       { id: 'augmentin_09', time: '09:00' },
+       { id: 'augmentin_21', time: '21:00' }]},
     
            
  { id: 'quetiapina', name: 'Quetiapina', dosage: '25mg', time: '22:00', type: 'as-needed', note: 'Se insonnia' },
             { id: 'lasix', name: 'Lasix', dosage: '25mg - 1 cpo', time: 'Mattina 8:00', type: 'as-needed' },
             { id: 'paracetamolo', name: 'Paracetamolo', dosage: '500mg (febbre) / 1000mg (dolore)', time: 'Al bisogno', type: 'as-needed' }
         ];
-
-        // ========== GESTIONE NOTIFICHE ==========
-        
-        let notificationsEnabled = false;
-        let scheduledNotifications = [];
-
-        const enableNotificationsBtn = document.getElementById('enableNotificationsBtn');
-        const testNotificationBtn = document.getElementById('testNotificationBtn');
-        const notificationStatus = document.getElementById('notificationStatus');
-
-        // Controlla supporto notifiche
-        function checkNotificationSupport() {
-            if (!('Notification' in window)) {
-                notificationStatus.textContent = '❌ Browser non supporta le notifiche';
-                notificationStatus.className = 'notification-status disabled';
-                enableNotificationsBtn.disabled = true;
-                testNotificationBtn.disabled = true;
-                return false;
-            }
-            return true;
-        }
-
-        // Aggiorna UI stato notifiche
-        function updateNotificationStatus() {
-            if (Notification.permission === 'granted') {
-                notificationStatus.textContent = '✅ Notifiche attive';
-                notificationStatus.className = 'notification-status enabled';
-                enableNotificationsBtn.textContent = '✓ Notifiche Attive';
-                enableNotificationsBtn.disabled = true;
-                testNotificationBtn.disabled = false;
-                notificationsEnabled = true;
-                scheduleAllNotifications();
-            } else if (Notification.permission === 'denied') {
-                notificationStatus.textContent = '❌ Notifiche bloccate - Abilita dalle impostazioni del browser';
-                notificationStatus.className = 'notification-status disabled';
-                enableNotificationsBtn.disabled = true;
-                testNotificationBtn.disabled = true;
-                notificationsEnabled = false;
-            } else {
-                notificationStatus.textContent = '🔔 Clicca per attivare le notifiche';
-                notificationStatus.className = 'notification-status default';
-                enableNotificationsBtn.disabled = false;
-                testNotificationBtn.disabled = true;
-                notificationsEnabled = false;
-            }
-        }
-
-        // Richiedi permesso notifiche
-        async function requestNotificationPermission() {
-            try {
-                const permission = await Notification.requestPermission();
-                updateNotificationStatus();
-                if (permission === 'granted') {
-                    showNotification('Notifiche attivate!', 'Riceverai promemoria per i tuoi farmaci');
-                }
-            } catch (error) {
-                console.error('Errore richiesta permesso:', error);
-            }
-        }
-
-        // Mostra notifica
-        function showNotification(title, body, icon = '💊') {
-            if (Notification.permission === 'granted') {
-                try {
-                    const notification = new Notification(title, {
-                        body: body,
-                        icon: icon,
-                        badge: icon,
-                        tag: 'medication-reminder',
-                        requireInteraction: true,
-                        silent: false
-                    });
-
-                    notification.onclick = function() {
-                        window.focus();
-                        notification.close();
-                    };
-                } catch (error) {
-                    console.error('Errore creazione notifica:', error);
-                }
-            }
-        }
-
-        // Test notifica
-        function testNotification() {
-            showNotification('Test Notifica', 'Le notifiche funzionano correttamente! 🎉');
-        }
-
-        // Calcola millisecondi fino a orario specifico
-        function getMillisecondsUntilTime(timeString) {
-            const now = new Date();
-            const [hours, minutes] = timeString.split(':').map(Number);
-            
-            const targetTime = new Date();
-            targetTime.setHours(hours, minutes, 0, 0);
-            
-            // Se l'orario è già passato oggi, schedula per domani
-            if (targetTime <= now) {
-                targetTime.setDate(targetTime.getDate() + 1);
-            }
-            
-            return targetTime.getTime() - now.getTime();
-        }
-
-        // Schedula notifica per un farmaco
-        function scheduleNotification(medication, time) {
-            const delay = getMillisecondsUntilTime(time);
-            
-            const timeoutId = setTimeout(() => {
-                let notificationBody = medication.dosage;
-                
-                if (medication.type === 'dosage-selection') {
-                    notificationBody += ' - Verifica dosaggio nell\'app';
-                }
-                
-                showNotification(
-                    `⏰ ${medication.name}`,
-                    notificationBody
-                );
-                
-                // Rischedula per il giorno dopo
-                scheduleNotification(medication, time);
-            }, delay);
-            
-            scheduledNotifications.push(timeoutId);
-            
-            console.log(`Notifica schedulata per ${medication.name} alle ${time}`);
-        }
-
-        // Schedula tutte le notifiche
-        function scheduleAllNotifications() {
-            // Cancella notifiche esistenti
-            scheduledNotifications.forEach(id => clearTimeout(id));
-            scheduledNotifications = [];
-            
-            if (!notificationsEnabled) return;
-            
-            medications.forEach(med => {
-                // Salta farmaci al bisogno
-                if (med.type === 'as-needed') return;
-                
-                if (med.type === 'multiple-doses') {
-                    // Schedula ogni dose
-                    med.doses.forEach(dose => {
-                        const time = dose.time;
-                        if (time && time !== '00:00') {
-                            scheduleNotification(med, time);
-                        }
-                    });
-                } else {
-                    // Schedula singola dose
-                    const times = med.time.split(',').map(t => t.trim());
-                    times.forEach(time => {
-                        if (time && !time.includes('Mattina') && !time.includes('bisogno')) {
-                            scheduleNotification(med, time);
-                        }
-                    });
-                }
-            });
-            
-            console.log(`Totale notifiche schedulate: ${scheduledNotifications.length}`);
-        }
-
-        // Event listeners notifiche
-        enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
-        testNotificationBtn.addEventListener('click', testNotification);
-
-        // ========== FINE GESTIONE NOTIFICHE ==========
 
         // Gestione modalità modifica
         const editModeBtn = document.getElementById('editModeBtn');
@@ -824,9 +565,11 @@
 
         editModeBtn.addEventListener('click', () => {
             if (isEditMode) {
+                // Disattiva modalità modifica
                 isEditMode = false;
                 updateUIMode();
             } else {
+                // Mostra modal password
                 passwordModal.classList.add('active');
                 passwordInput.value = '';
                 passwordInput.focus();
@@ -881,6 +624,7 @@
                 modeIndicator.classList.add('view-mode');
             }
             
+            // Aggiorna gli elementi interattivi
             updateInteractiveElements();
         }
 
@@ -920,12 +664,13 @@
         }
 
         function getDateKey(daysOffset = 0) {
-            const date = new Date();
-            if (date.getHours() < 7) {
-                date.setDate(date.getDate() - 1);
-            }
-            date.setDate(date.getDate() + daysOffset);
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const date = new Date();
+        // Se sono le ore prima delle 07:00, considero ancora il giorno precedente
+        if (date.getHours() < 7) {
+        date.setDate(date.getDate() - 1);
+        }
+        date.setDate(date.getDate() + daysOffset);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
         function displayDate() {
@@ -984,6 +729,7 @@
                     <div class="medication-dosage">${med.dosage}${med.note ? ' - ' + med.note : ''}</div>
                 `;
 
+                // Mostra info di ieri solo per Previscan
                 if (med.id === 'previscan') {
                     if (yesterdayData?.[med.id]?.dosage) {
                         const yesterdayDosage = yesterdayData[med.id].dosage;
@@ -1017,6 +763,7 @@
                     content += `</div>`;
                 }
 
+                // Gestione farmaci con dosi multiple
                 if (med.type === 'multiple-doses') {
                     content += `<div class="multiple-doses-container">`;
                     med.doses.forEach(dose => {
@@ -1117,8 +864,6 @@
 
         // Initialize
         displayDate();
-        checkNotificationSupport();
-        updateNotificationStatus();
         
         // Aggiorna la data ogni minuto
         setInterval(() => {
@@ -1142,6 +887,7 @@
             let yesterdayDataCache = null;
             let todayDataCache = null;
             
+            // Listen for yesterday's data
             onValue(ref(database, yesterdayKey), (snapshot) => {
                 console.log('Yesterday data received:', snapshot.val());
                 yesterdayDataCache = snapshot.val();
@@ -1152,6 +898,7 @@
                 console.error('Errore lettura ieri:', error);
             });
             
+            // Listen for today's data
             onValue(ref(database, todayKey), (snapshot) => {
                 console.log('Today data received:', snapshot.val());
                 todayDataCache = snapshot.val();
